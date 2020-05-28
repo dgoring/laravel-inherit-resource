@@ -1,6 +1,5 @@
 {
     "name": "dgoring/laravel-inherit-resource",
-    "type": "project",
     "description": "Quick minilist resource controllers for Laravel",
     "keywords": [
         "resource",
