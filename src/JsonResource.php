@@ -1,9 +1,13 @@
 <?php
 namespace Dgoring\Laravel\InheritResource;
 
+use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+
 trait JsonResource
 {
   use GuessResource;
+  use AuthorizesRequests, ValidatesRequests;
 
   public function index()
   {
