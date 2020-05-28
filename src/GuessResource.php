@@ -1,14 +1,11 @@
 <?php
 namespace Dgoring\Laravel\InheritResource;
 
-use Illuminate\Foundation\Bus\DispatchesJobs;
-use Illuminate\Foundation\Validation\ValidatesRequests;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 trait GuessResource
 {
-  use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
-
   protected $class_name    = null;
   protected $collection_name = null;
   protected $controller_name = null;
@@ -35,7 +32,7 @@ trait GuessResource
       return $this->class_name;
     }
 
-    $class = config('inherit_resource.namespace', 'App\\') . str_singular($this->getControllerName());
+    $class = config('inherit_resource.namespace', 'App\\') . Str::singluar($this->getControllerName());
 
     if(class_exists($class))
     {
@@ -54,7 +51,7 @@ trait GuessResource
       return $this->instance_name;
     }
 
-    return $this->instance_name = str_singular(snake_case($this->getControllerName()));
+    return $this->instance_name = Str::singluar(Str::snake($this->getControllerName()));
   }
 
   protected function getCollectionName()
@@ -64,7 +61,7 @@ trait GuessResource
       return $this->collection_name;
     }
 
-    return $this->collection_name = snake_case($this->getControllerName());
+    return $this->collection_name = Str::snake($this->getControllerName());
   }
 
   protected function collection()

@@ -1,6 +1,10 @@
 <?php
 namespace Dgoring\Laravel\InheritResource;
 
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
+use App\Providers\RouteServiceProvider;
+
 trait GuessView
 {
   protected $view_ns = null;
@@ -22,8 +26,8 @@ trait GuessView
 
   protected final function getControllerPath()
   {
-    $reflection = new \ReflectionClass(\App\Providers\RouteServiceProvider::class);
-    $namespace = array_get($reflection->getDefaultProperties(), 'namespace');
+    $reflection = new \ReflectionClass(RouteServiceProvider::class);
+    $namespace = Arr::get($reflection->getDefaultProperties(), 'namespace');
 
     $class = get_called_class();
 
@@ -37,7 +41,7 @@ trait GuessView
       return $this->view_ns;
     }
 
-    return $this->view_ns = str_replace('\\_', '.', snake_case(
+    return $this->view_ns = str_replace('\\_', '.', Str::snake(
       preg_replace('/\A([\w\\\]+)Controller\z/', '$1', $this->getControllerPath())
     )) . '.';
   }
