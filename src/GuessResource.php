@@ -32,7 +32,7 @@ trait GuessResource
       return $this->class_name;
     }
 
-    $class = config('inherit_resource.namespace', 'App\\') . Str::singluar($this->getControllerName());
+    $class = config('inherit_resource.namespace', 'App\\') . Str::singular($this->getControllerName());
 
     if(class_exists($class))
     {
@@ -51,7 +51,7 @@ trait GuessResource
       return $this->instance_name;
     }
 
-    return $this->instance_name = Str::singluar(Str::snake($this->getControllerName()));
+    return $this->instance_name = Str::singular(Str::snake($this->getControllerName()));
   }
 
   protected function getCollectionName()
