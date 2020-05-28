@@ -61,7 +61,7 @@ trait HtmlResource
 
     if($this->resource()->save())
     {
-      return redirect()->action(
+      return redirect()->route(
           $this->getResourceRoute() . '.show',
           array_merge(request()->route()->parameters, [$this->resource()->id])
         )
