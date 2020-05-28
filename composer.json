@@ -1,0 +1,51 @@
+{
+    "name": "dgoring/laravel-inherit-resource",
+    "type": "project",
+    "description": "Quick minilist resource controllers for Laravel",
+    "keywords": [
+        "resource",
+        "laravel"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "David Goring",
+            "email": "david.lj.goring@gmail.com"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/dgoring/laravel-inherit-resource/issues",
+        "source": "https://github.com/dgoring/laravel-inherit-resource"
+    },
+    "require": {
+        "php": "^7.1.3",
+        "laravel/framework": "5.8.*",
+        "laravelcollective/html": "^5.8"
+    },
+    "require-dev": {
+        "fzaninotto/faker": "^1.4",
+        "phpunit/phpunit": "^7.5"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": []
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Dgoring\\Laravel\\InheritResource\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
