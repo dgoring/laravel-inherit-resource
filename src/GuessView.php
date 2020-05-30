@@ -1,6 +1,8 @@
 <?php
 namespace Dgoring\Laravel\InheritResource;
 
+use ReflectionClass;
+
 trait GuessView
 {
   protected $view_ns = null;
@@ -22,7 +24,7 @@ trait GuessView
 
   protected final function getControllerPath()
   {
-    $reflection = new \ReflectionClass(\App\Providers\RouteServiceProvider::class);
+    $reflection = new ReflectionClass(\App\Providers\RouteServiceProvider::class);
     $namespace = array_get($reflection->getDefaultProperties(), 'namespace');
 
     $class = get_called_class();

@@ -1,14 +1,8 @@
 <?php
 namespace Dgoring\Laravel\InheritResource;
 
-use Illuminate\Foundation\Bus\DispatchesJobs;
-use Illuminate\Foundation\Validation\ValidatesRequests;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-
 trait GuessResource
 {
-  use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
-
   protected $class_name    = null;
   protected $collection_name = null;
   protected $controller_name = null;

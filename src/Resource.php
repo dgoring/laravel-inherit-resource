@@ -1,9 +1,14 @@
 <?php
 namespace Dgoring\Laravel\InheritResource;
 
+use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+
 trait Resource
 {
   use GuessResource, GuessView;
+
+  use AuthorizesRequests, ValidatesRequests;
 
   public function index()
   {
