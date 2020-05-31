@@ -73,7 +73,7 @@ trait GuessResource
     return $query;
   }
 
-  private $resource = null;
+  protected $resource = null;
 
   protected function resource()
   {
