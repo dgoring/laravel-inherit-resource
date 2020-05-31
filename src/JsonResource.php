@@ -20,6 +20,7 @@ trait JsonResource
     }
 
     $query = $this->collection();
+    $count = $query->count();
 
     if($skip = request()->query('skip'))
     {
@@ -35,7 +36,7 @@ trait JsonResource
       $query->take($this->per);
     }
 
-    return response()->json($query->get())->withHeaders(['Count' => $query->count()]);
+    return response()->json($query->get())->withHeaders(['Count' => $count]);
   }
 
   public function show()
