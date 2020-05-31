@@ -9,6 +9,8 @@ trait JsonResource
   use GuessResource;
   use AuthorizesRequests, ValidatesRequests;
 
+  protected $per = 15;
+
   public function index()
   {
     if($this->authorize)
@@ -29,7 +31,7 @@ trait JsonResource
     }
     else
     {
-      $query->take(15);
+      $query->take($this->per);
     }
 
     return response()->json($query->get())->withHeaders(['Count' => $query->count()]);

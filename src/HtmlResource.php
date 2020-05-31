@@ -9,6 +9,8 @@ trait HtmlResource
   use GuessResource, GuessView;
   use AuthorizesRequests, ValidatesRequests;
 
+  protected $per = 15;
+
   public function index()
   {
     if($this->authorize)
@@ -17,7 +19,7 @@ trait HtmlResource
     }
 
     return view($this->getViewNS() . $this->views['index'], [
-      $this->getCollectionName() => $this->collection()->paginate(15)->appends(request()->query())
+      $this->getCollectionName() => $this->collection()->paginate($this->per)->appends(request()->query())
     ]);
   }
 

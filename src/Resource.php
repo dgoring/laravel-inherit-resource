@@ -9,6 +9,7 @@ trait Resource
   use GuessResource, GuessView;
   use AuthorizesRequests, ValidatesRequests;
 
+  protected $per = 15;
 
   public function index()
   {
@@ -32,14 +33,14 @@ trait Resource
       }
       else
       {
-        $query->take(15);
+        $query->take($this->per);
       }
 
       return response()->json($query->get())->withHeaders(['Count' => $query->count()]);
     }
 
     return view($this->getViewNS() . $this->views['index'], [
-      $this->getCollectionName() => $this->collection()->paginate(15)->appends(request()->query())
+      $this->getCollectionName() => $this->collection()->paginate($this->per)->appends(request()->query())
     ]);
   }
 
