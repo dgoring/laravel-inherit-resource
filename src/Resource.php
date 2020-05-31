@@ -21,6 +21,7 @@ trait Resource
     if(request()->wantsJson())
     {
       $query = $this->collection();
+      $count = $query->count();
 
       if($skip = request()->query('skip'))
       {
@@ -36,7 +37,7 @@ trait Resource
         $query->take($this->per);
       }
 
-      return response()->json($query->get())->withHeaders(['Count' => $query->count()]);
+      return response()->json($query->get())->withHeaders(['Count' => $count]);
     }
 
     return view($this->getViewNS() . $this->views['index'], [
