@@ -16,7 +16,23 @@ trait JsonResource
       $this->authorize('viewAny', $this->getClassName());
     }
 
-    return response()->json($this->collection()->take(15)->get());
+    $query = $this->collection();
+
+    if($skip = request()->query('skip'))
+    {
+      $query->skip($skip);
+    }
+
+    if($take = request()->query('take'))
+    {
+      $query->take($take);
+    }
+    else
+    {
+      $query->take(15);
+    }
+
+    return response()->json($query->get())->withHeaders(['Count' => $query->count()]);
   }
 
   public function show()

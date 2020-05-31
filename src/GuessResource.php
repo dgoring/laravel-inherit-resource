@@ -70,16 +70,6 @@ trait GuessResource
 
     $query = $class::query();
 
-    if($skip = request()->query('skip'))
-    {
-      $query->skip($skip);
-    }
-
-    if($take = request()->query('take'))
-    {
-      $query->take($take);
-    }
-
     return $query;
   }
 
