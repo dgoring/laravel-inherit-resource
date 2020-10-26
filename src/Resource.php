@@ -1,13 +1,12 @@
 <?php
 namespace Dgoring\Laravel\InheritResource;
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Pagination\LengthAwarePaginator;
-
+use Illuminate\Support\Collection;
 
 trait Resource
 {
@@ -44,9 +43,12 @@ trait Resource
         $query->skip($skip);
       }
 
-      if($take = request()->query('take'))
+      if(request()->has('take'))
       {
-        $query->take($take);
+        if($take = request()->query('take'))
+        {
+          $query->take($take);
+        }
       }
       else
       {
@@ -61,7 +63,7 @@ trait Resource
 
     $results = ($total = $base->getCountForPagination($columns))
                                 ? $query->forPage($page, $this->per)->get(['*'])
-                                : $base->newCollection();
+                                : new Collection([]);
 
     $paginator = new LengthAwarePaginator($results, $total, $this->per, $page, [
       'path' => Paginator::resolveCurrentPath(),

@@ -3,6 +3,7 @@ namespace Dgoring\Laravel\InheritResource;
 
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Database\Eloquent\Builder;
 
 trait JsonResource
 {
@@ -12,6 +13,8 @@ trait JsonResource
 
   protected $per = 15;
 
+  protected $distinctFix = true;
+
   public function index()
   {
     if($this->authorize)
@@ -20,23 +23,32 @@ trait JsonResource
     }
 
     $query = $this->collection();
-    $count = $query->count();
+
+    $columns = ['*'];
+
+    if($this->distinctFix && $query instanceof Builder && $query->toBase()->distinct && ($model = $query->getModel()))
+    {
+      $columns = [$model->getTable() . '.' . $model->getKeyName()];
+    }
 
     if($skip = request()->query('skip'))
     {
       $query->skip($skip);
     }
 
-    if($take = request()->query('take'))
+    if(request()->has('take'))
     {
-      $query->take($take);
+      if($take = request()->query('take'))
+      {
+        $query->take($take);
+      }
     }
     else
     {
       $query->take($this->per);
     }
 
-    return response()->json($query->get())->withHeaders(['Count' => $count]);
+    return response()->json($query->get())->withHeaders(['Count' => $base->getCountForPagination($columns)]);
   }
 
   public function show()
