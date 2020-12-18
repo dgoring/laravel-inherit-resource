@@ -6,6 +6,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 trait HtmlResource
 {
@@ -24,8 +25,31 @@ trait HtmlResource
       $this->authorize('viewAny', $this->getClassName());
     }
 
+    $query = $this->collection();
+
+    $columns = ['*'];
+
+    if($this->distinctFix && $query instanceof Builder && $query->toBase()->distinct && ($model = $query->getModel()))
+    {
+      $columns = [$model->getTable() . '.' . $model->getKeyName()];
+    }
+
+    $base = $query instanceof Builder ? $query->toBase() : $query;
+
+    $pageName = 'page';
+    $page = Paginator::resolveCurrentPage($pageName);
+
+    $results = ($total = $base->getCountForPagination($columns))
+                                ? $query->forPage($page, $this->per)->get(['*'])
+                                : new Collection([]);
+
+    $paginator = new LengthAwarePaginator($results, $total, $this->per, $page, [
+      'path' => Paginator::resolveCurrentPath(),
+      'pageName' => $pageName,
+    ]);
+
     return view($this->getViewNS() . $this->views['index'], [
-      $this->getCollectionName() => $this->collection()->paginate($this->per)->appends(request()->query())
+      $this->getCollectionName() => $paginator->appends(request()->query())
     ]);
   }
 

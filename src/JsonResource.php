@@ -31,6 +31,8 @@ trait JsonResource
       $columns = [$model->getTable() . '.' . $model->getKeyName()];
     }
 
+    $base = $query instanceof Builder ? $query->toBase() : $query;
+
     if($skip = request()->query('skip'))
     {
       $query->skip($skip);
