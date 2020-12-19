@@ -82,9 +82,7 @@ trait GuessResource
       return $this->resource;
     }
 
-    $class = $this->getClassName();
-
-    if($id = request()->{$this->getInstanceName()})
+    if($id = request()->route($this->getInstanceName()))
     {
       return $this->resource = $this->collection()->findOrFail($id);
     }
