@@ -3,7 +3,9 @@ namespace Dgoring\Laravel\InheritResource;
 
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 trait JsonResource
 {
@@ -31,7 +33,17 @@ trait JsonResource
       $columns = [$model->getTable() . '.' . $model->getKeyName()];
     }
 
-    $base = $query instanceof Builder ? $query->toBase() : $query;
+    $base = $query;
+
+    if($base instanceof Builder)
+    {
+      $base = $base->toBase();
+    }
+    else
+    if($base instanceof Relation)
+    {
+      $base = $base->getBaseQuery();
+    }
 
     if($skip = request()->query('skip'))
     {
