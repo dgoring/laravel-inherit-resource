@@ -58,6 +58,7 @@ trait JsonResource
       }
     }
     else
+    if($this->per > 0)
     {
       $query->take($this->per);
     }

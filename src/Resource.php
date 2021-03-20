@@ -63,6 +63,7 @@ trait Resource
         }
       }
       else
+      if($this->per > 0)
       {
         $query->take($this->per);
       }
@@ -73,9 +74,16 @@ trait Resource
     $pageName = 'page';
     $page = Paginator::resolveCurrentPage($pageName);
 
-    $results = ($total = $base->getCountForPagination($columns))
-                                ? $query->forPage($page, $this->per)->get(['*'])
-                                : new Collection([]);
+    $results = null;
+
+    if($total = $base->getCountForPagination($columns))
+    {
+      $results = $this->per > 0 ? $query->forPage($page, $this->per)->get(['*']) : $query->get(['*']);
+    }
+    else
+    {
+      $results = new Collection([]);
+    }
 
     $paginator = new LengthAwarePaginator($results, $total, $this->per, $page, [
       'path' => Paginator::resolveCurrentPath(),
