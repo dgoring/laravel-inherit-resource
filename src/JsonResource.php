@@ -6,10 +6,13 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 trait JsonResource
 {
-  use GuessResource;
+  use GuessResource, JsonReponses;
+
   use AuthorizesRequests, ValidatesRequests;
 
   protected $per = 15;
+
+  protected $fillOnlyValidated = false;
 
   public function index()
   {
@@ -18,24 +21,7 @@ trait JsonResource
       $this->authorize('viewAny', $this->getClassName());
     }
 
-    $query = $this->collection();
-    $count = $query->count();
-
-    if($skip = request()->query('skip'))
-    {
-      $query->skip($skip);
-    }
-
-    if($take = request()->query('take'))
-    {
-      $query->take($take);
-    }
-    else
-    {
-      $query->take($this->per);
-    }
-
-    return response()->json($query->get())->withHeaders(['Count' => $count]);
+    return $this->jsonIndex();
   }
 
   public function show()
@@ -45,7 +31,7 @@ trait JsonResource
       $this->authorize('view', $this->resource());
     }
 
-    return response()->json($this->resource());
+    return $this->jsonShow();
   }
 
   public function store()
@@ -55,19 +41,26 @@ trait JsonResource
       $this->authorize('create', $this->resource());
     }
 
+    $attributes = request()->all();
+
     if(method_exists($this, 'validationRules'))
     {
-      $this->validateWith($this->validationRules());
+      $validated = $this->validateWith($this->validationRules());
+
+      if($this->fillOnlyValidated)
+      {
+        $attributes = $validated;
+      }
     }
 
-    $this->resource()->fill(request()->all());
+    $this->resource()->fill($attributes);
 
     if($this->resource()->save())
     {
-      return response()->json($this->resource());
+      return $this->jsonStoreSuccess($attributes);
     }
 
-    return response()->json(['error' => 'Error encountered creating ' . class_basename($this->getClassName())])->status(500);
+    return $this->jsonStoreFailure($attributes);
   }
 
   public function update()
@@ -77,19 +70,26 @@ trait JsonResource
       $this->authorize('update', $this->resource());
     }
 
+    $attributes = request()->all();
+
     if(method_exists($this, 'validationRules'))
     {
-      $this->validateWith($this->validationRules());
+      $validated = $this->validateWith($this->validationRules());
+
+      if($this->fillOnlyValidated)
+      {
+        $attributes = $validated;
+      }
     }
 
-    $this->resource()->fill(request()->all());
+    $this->resource()->fill($attributes);
 
     if($this->resource()->save())
     {
-      return response()->json($this->resource());
+      return $this->jsonUpdateSuccess($attributes);
     }
 
-    return response()->json(['error' => 'Error encountered updating ' . class_basename($this->getClassName())], 500);
+    return $this->jsonUpdateFailure($attributes);
   }
 
   public function destroy()
@@ -101,9 +101,9 @@ trait JsonResource
 
     if($this->resource()->delete())
     {
-      return response()->json([]);
+      return $this->jsonDestroySuccess();
     }
 
-    return response()->json(['error' => 'Error encountered deleting ' . class_basename($this->getClassName())], 500);
+    return $this->jsonDestroyFailure();
   }
 }

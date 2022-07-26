@@ -191,6 +191,9 @@ below shows the config file for `App\Models`
 
 return [
   'namespace' => 'App\\Models\\',
+
+  'json_resources' => 'App\\Http\\Resources\\',
+  'json_collections' => 'App\\Http\\Collections\\',
 ];
 
 ```

@@ -6,10 +6,13 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 trait HtmlResource
 {
-  use GuessResource, GuessView;
+  use GuessResource, ViewResponses;
+
   use AuthorizesRequests, ValidatesRequests;
 
   protected $per = 15;
+
+  protected $fillOnlyValidated = false;
 
   public function index()
   {
@@ -18,9 +21,7 @@ trait HtmlResource
       $this->authorize('viewAny', $this->getClassName());
     }
 
-    return view($this->getViewNS() . $this->views['index'], [
-      $this->getCollectionName() => $this->collection()->paginate($this->per)->appends(request()->query())
-    ]);
+    return $this->htmlIndex();
   }
 
   public function show()
@@ -30,9 +31,7 @@ trait HtmlResource
       $this->authorize('view', $this->resource());
     }
 
-    return view($this->getViewNS() . $this->views['show'], [
-      $this->getInstanceName() => $this->resource()
-    ]);
+    return $this->htmlShow();
   }
 
   public function create()
@@ -42,9 +41,7 @@ trait HtmlResource
       $this->authorize('create', $this->resource());
     }
 
-    return view($this->getViewNS() . $this->views['create'], [
-      $this->getInstanceName() => $this->resource()
-    ]);
+    return $this->htmlCreate();
   }
 
   public function store()
@@ -54,30 +51,26 @@ trait HtmlResource
       $this->authorize('create', $this->resource());
     }
 
+    $attributes = request()->all();
+
     if(method_exists($this, 'validationRules'))
     {
-      $this->validateWith($this->validationRules());
+      $validated = $this->validateWith($this->validationRules());
+
+      if($this->fillOnlyValidated)
+      {
+        $attributes = $validated;
+      }
     }
 
-    $this->resource()->fill(request()->all());
+    $this->resource()->fill($attributes);
 
     if($this->resource()->save())
     {
-      return redirect()->route(
-          $this->getResourceRoute() . '.show',
-          array_merge(request()->route()->parameters, [$this->resource()->id])
-        )
-        ->with('alerts.success', class_basename($this->getClassName()) . ' Successfully created');
+      return $this->htmlStoreSuccess($attributes);
     }
 
-    if(request()->wantsJson())
-    {
-      return response()->json(['error' => 'Error encountered creating ' . class_basename($this->getClassName())])->status(500);
-    }
-
-    return redirect()->back()
-      ->with('alerts.danger', 'Error encountered creating ' . class_basename($this->getClassName()))
-      ->withInputs(request()->input());
+    return $this->htmlStoreFailure($attributes);
   }
 
   public function edit()
@@ -87,9 +80,7 @@ trait HtmlResource
       $this->authorize('update', $this->resource());
     }
 
-    return view($this->getViewNS() . $this->views['edit'], [
-      $this->getInstanceName() => $this->resource()
-    ]);
+    return $this->htmlEdit();
   }
 
   public function update()
@@ -99,25 +90,26 @@ trait HtmlResource
       $this->authorize('update', $this->resource());
     }
 
+    $attributes = request()->all();
+
     if(method_exists($this, 'validationRules'))
     {
-      $this->validateWith($this->validationRules());
+      $validated = $this->validateWith($this->validationRules());
+
+      if($this->fillOnlyValidated)
+      {
+        $attributes = $validated;
+      }
     }
 
-    $this->resource()->fill(request()->all());
+    $this->resource()->fill($attributes);
 
     if($this->resource()->save())
     {
-      return redirect()->route(
-          $this->getResourceRoute() . '.show',
-          array_merge(request()->route()->parameters)
-        )
-        ->with('alerts.success', class_basename($this->getClassName()) . ' Successfully updated');
+      return $this->htmlUpdateSuccess($attributes);
     }
 
-    return redirect()->back()
-      ->with('alerts.danger', 'Error encountered updating ' . class_basename($this->getClassName()))
-      ->withInputs(request()->input());
+    return $this->htmlUpdateFailure($attributes);
   }
 
   public function destroy()
@@ -129,15 +121,10 @@ trait HtmlResource
 
     if($this->resource()->delete())
     {
-      $parameters = request()->route()->parameters;
-      array_pop($parameters);
 
-      return redirect()->route($this->getResourceRoute() . '.index', $parameters)
-        ->with('alerts.success', class_basename($this->getClassName()) . ' Successfully deleted');
+      return $this->htmlDestroySuccess();
     }
 
-    return redirect()->back()
-      ->with('alerts.danger', 'Error encountered deleting ' . class_basename($this->getClassName()))
-      ->withInputs(request()->input());
+    return $this->htmlDestroyFailure();
   }
 }
