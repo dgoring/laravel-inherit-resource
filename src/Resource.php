@@ -3,6 +3,10 @@ namespace Dgoring\Laravel\InheritResource;
 
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 trait Resource
 {
@@ -11,6 +15,8 @@ trait Resource
 
   protected $per = 15;
 
+  protected $distinctFix = true;
+
   public function index()
   {
     if($this->authorize)
@@ -18,11 +24,29 @@ trait Resource
       $this->authorize('viewAny', $this->getClassName());
     }
 
+    $query = $this->collection();
+
+    $columns = ['*'];
+
+    if($this->distinctFix && $query instanceof Builder && $query->toBase()->distinct && ($model = $query->getModel()))
+    {
+      $columns = [$model->getTable() . '.' . $model->getKeyName()];
+    }
+
+    $base = $query;
+
+    if($base instanceof Builder)
+    {
+      $base = $base->toBase();
+    }
+    else
+    if($base instanceof Relation)
+    {
+      $base = $base->getBaseQuery();
+    }
+
     if(request()->wantsJson())
     {
-      $query = $this->collection();
-      $count = $query->count();
-
       if($skip = request()->query('skip'))
       {
         $query->skip($skip);
@@ -33,15 +57,35 @@ trait Resource
         $query->take($take);
       }
       else
+      if($this->per > 0)
       {
         $query->take($this->per);
       }
 
-      return response()->json($query->get())->withHeaders(['Count' => $count]);
+      return response()->json($query->get())->withHeaders(['Count' => $base->getCountForPagination($columns)]);
     }
 
+    $pageName = 'page';
+    $page = Paginator::resolveCurrentPage($pageName);
+
+    $results = null;
+
+    if($total = $base->getCountForPagination($columns))
+    {
+      $results = $this->per > 0 ? $query->forPage($page, $this->per)->get(['*']) : $query->get(['*']);
+    }
+    else
+    {
+      $results = new Collection([]);
+    }
+
+    $paginator = new LengthAwarePaginator($results, $total, $this->per, $page, [
+      'path' => Paginator::resolveCurrentPath(),
+      'pageName' => $pageName,
+    ]);
+
     return view($this->getViewNS() . $this->views['index'], [
-      $this->getCollectionName() => $this->collection()->paginate($this->per)->appends(request()->query())
+      $this->getCollectionName() => $paginator->appends(request()->query())
     ]);
   }
 
