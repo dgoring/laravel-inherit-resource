@@ -81,8 +81,6 @@ trait JsonResponses
       $base = $base->getBaseQuery();
     }
 
-    $page = Paginator::resolveCurrentPage($this->pageQueryVar);
-
     if($skip = request()->query('skip'))
     {
       $query->skip($skip);
@@ -101,14 +99,11 @@ trait JsonResponses
       $query->take($this->per);
     }
 
-    if($class = $this->getJsonCollectionClassName())
-    {
-      return $class::collection($query->get())->with(['Count' => $base->getCountForPagination($columns)]);
-    }
+    $class = $this->getJsonCollectionClassName() ?: $this->getJsonResourceClassName();
 
-    if($class = $this->getJsonResourceClassName())
+    if($class)
     {
-      return $class::collection($query->get())->with(['Count' => $base->getCountForPagination($columns)]);
+      return $class::collection($query->get())->additional(['length' => $base->getCountForPagination($columns)]);
     }
 
     return response()->json($query->get())->withHeaders(['Count' => $base->getCountForPagination($columns)]);
