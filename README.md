@@ -152,6 +152,28 @@ and it should also already be in the model in the `create` view variable
 this resource is also ready to respond to json requests
 note that the index will return a total count in the response headers as `Count`
 
+also if defined in a appropriate place a JsonCollection or JsonResource formatter will be used for the model i.e.
+```php
+namespace App\Http\Resources;
+
+use Illuminate\Http\Resources\Json\JsonResource;
+
+class UserResource extends JsonResource
+{
+
+}
+
+namespace App\Http\Resources;
+
+use Illuminate\Http\Resources\Json\ResourceCollection;
+
+class UsersCollection extends ResourceCollection
+{
+
+}
+```
+
+
 And you can also allow only JSON responses
 ```php
 namespace App\Http\Controllers;
@@ -181,10 +203,12 @@ class UsersController extends Controller
 
 ## Overrides
 
-### Model Path
+### Namespaces
 By default models are assumed to be under the `App` namespace but you can change that by adding the file `config/inherit_resource.php`
 
 below shows the config file for `App\Models`
+
+and also the namespaces for the json resources and collections
 
 ```php
 <?php
@@ -214,6 +238,9 @@ class UsersController extends Controller
 
     $this->authorize = false; // Switch to turn off authorize checks (default is on)
 
+    $this->distinctFix = true; // if the query builder returns a distinct query, a fix will be applied to get the distinct count used for pagination
+    $this->fillOnlyValidated = false; // IF enabled only the validated fields will be allowed to be mass assigned to the model (will default on in next major version)
+
     //Only for Resource and HtmlResource
 
     $this->view_ns = 'customer_users'; // dot notation path to views folder
@@ -231,7 +258,36 @@ class UsersController extends Controller
 
 ```
 
+### Responses
+these response functions can be overridden to allow you to have completely custom responses to certain actions without having to override the entire route function
 
+
+```php
+
+class UsersController extends Controller
+{
+  use Resource;
+
+  protected function htmlIndex();
+  protected function htmlShow();
+  protected function htmlCreate();
+  protected function htmlStoreSuccess();
+  protected function htmlStoreFailure();
+  protected function htmlEdit();
+  protected function htmlUpdateSuccess();
+  protected function htmlUpdateFailure();
+  protected function htmlDestroySuccess();
+  protected function htmlDestroyFailure();
+
+  protected function jsonIndex();
+  protected function jsonShow();
+  protected function jsonStoreSuccess();
+  protected function jsonStoreFailure();
+  protected function jsonUpdateSuccess();
+  protected function jsonUpdateFailure();
+  protected function jsonDestroySuccess();
+  protected function jsonDestroyFailure();
+}
 
 
 
