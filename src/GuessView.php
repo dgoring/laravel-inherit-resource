@@ -7,6 +7,8 @@ trait GuessView
 {
   protected $view_ns = null;
 
+  protected $pageQueryVar = 'page';
+
   protected $views = [
     'index'  => 'index',
     'create' => 'create',
@@ -43,6 +45,5 @@ trait GuessView
       preg_replace('/\A([\w\\\]+)Controller\z/', '$1', $this->getControllerPath())
     )) . '.';
   }
-
 }
 
