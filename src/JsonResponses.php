@@ -61,7 +61,30 @@ trait JsonResponses
   protected function jsonIndex()
   {
     $query = $this->collection();
-    $count = $query->count();
+
+    $columns = ['*'];
+
+    if($this->distinctFix && $query instanceof Builder && $query->toBase()->distinct && ($model = $query->getModel()))
+    {
+      $columns = [$model->getTable() . '.' . $model->getKeyName()];
+    }
+
+    $base = $query;
+
+    if($base instanceof Builder)
+    {
+      $base = $base->toBase();
+    }
+    else
+    if($base instanceof Relation)
+    {
+      $base = $base->getBaseQuery();
+    }
+
+    if($skip = request()->query('skip'))
+    {
+      $query->skip($skip);
+    }
 
     if(request()->has('take'))
     {
@@ -76,14 +99,11 @@ trait JsonResponses
       $query->take($this->per);
     }
 
-    if($class = $this->getJsonCollectionClassName())
-    {
-      return $class::collection($query->get())->with(['Count' => $count]);
-    }
+    $class = $this->getJsonCollectionClassName() ?: $this->getJsonResourceClassName();
 
-    if($class = $this->getJsonResourceClassName())
+    if($class)
     {
-      return $class::collection($query->get())->with(['Count' => $count]);
+      return $class::collection($query->get())->additional(['length' => $base->getCountForPagination($columns)]);
     }
 
     return response()->json($query->get())->withHeaders(['Count' => $count]);

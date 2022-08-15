@@ -6,7 +6,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 trait Resource
 {
-  use GuessResource, ViewResponses, JsonReponses;
+  use GuessResource, ViewResponses, JsonResponses;
 
   use AuthorizesRequests, ValidatesRequests;
 

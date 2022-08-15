@@ -80,7 +80,7 @@ trait ViewResponses
     array_pop($parameters);
 
     return redirect()->route($this->getResourceRoute() . '.index', $parameters)
-          ->with('alerts.success', class_basename($this->getClassName()) . ' Successfully deleted')
+          ->with('alerts.success', class_basename($this->getClassName()) . ' Successfully deleted');
 
   }
 
