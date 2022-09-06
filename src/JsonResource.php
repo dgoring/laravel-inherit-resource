@@ -3,6 +3,8 @@ namespace Dgoring\Laravel\InheritResource;
 
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 trait JsonResource
 {
@@ -13,6 +15,8 @@ trait JsonResource
   protected $per = 15;
 
   protected $fillOnlyValidated = false;
+
+  protected $distinctFix = true;
 
   public function index()
   {

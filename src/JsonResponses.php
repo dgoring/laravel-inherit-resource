@@ -3,6 +3,7 @@ namespace Dgoring\Laravel\InheritResource;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Str;
 
 trait JsonResponses
 {
@@ -40,14 +41,14 @@ trait JsonResponses
       return $this->json_resource_class_name;
     }
 
-    $class = config('inherit_resource.json_resources', 'App\\Http\\Resources\\') . str_singular($this->getControllerName()) . 'Resource';
+    $class = config('inherit_resource.json_resources', 'App\\Http\\Resources\\') . Str::singular($this->getControllerName()) . 'Resource';
 
     if(class_exists($class))
     {
       return $this->json_resource_class_name = $class;
     }
 
-    $class = config('inherit_resource.json_resources', 'App\\Http\\Resources\\') . str_singular($this->getControllerName());
+    $class = config('inherit_resource.json_resources', 'App\\Http\\Resources\\') . Str::singular($this->getControllerName());
 
     if(class_exists($class))
     {
@@ -101,9 +102,11 @@ trait JsonResponses
 
     $class = $this->getJsonCollectionClassName() ?: $this->getJsonResourceClassName();
 
+    $count = $base->getCountForPagination($columns);
+
     if($class)
     {
-      return $class::collection($query->get())->additional(['length' => $base->getCountForPagination($columns)]);
+      return $class::collection($query->get())->additional(['length' => $count]);
     }
 
     return response()->json($query->get())->withHeaders(['Count' => $count]);

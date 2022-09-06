@@ -3,6 +3,11 @@ namespace Dgoring\Laravel\InheritResource;
 
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Collection;
 
 trait HtmlResource
 {
@@ -13,6 +18,8 @@ trait HtmlResource
   protected $per = 15;
 
   protected $fillOnlyValidated = false;
+
+  protected $distinctFix = true;
 
   public function index()
   {
