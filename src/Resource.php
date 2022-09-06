@@ -11,10 +11,13 @@ use Illuminate\Support\Collection;
 
 trait Resource
 {
-  use GuessResource, GuessView;
+  use GuessResource, ViewResponses, JsonResponses;
+
   use AuthorizesRequests, ValidatesRequests;
 
   protected $per = 15;
+
+  protected $fillOnlyValidated = false;
 
   protected $distinctFix = true;
 
@@ -25,69 +28,12 @@ trait Resource
       $this->authorize('viewAny', $this->getClassName());
     }
 
-    $query = $this->collection();
-
-    $columns = ['*'];
-
-    if($this->distinctFix && $query instanceof Builder && $query->toBase()->distinct && ($model = $query->getModel()))
-    {
-      $columns = [$model->getTable() . '.' . $model->getKeyName()];
-    }
-
-    $base = $query;
-
-    if($base instanceof Builder)
-    {
-      $base = $base->toBase();
-    }
-    else
-    if($base instanceof Relation)
-    {
-      $base = $base->getBaseQuery();
-    }
-
     if(request()->wantsJson())
     {
-      if($skip = request()->query('skip'))
-      {
-        $query->skip($skip);
-      }
-
-      if($take = request()->query('take'))
-      {
-        $query->take($take);
-      }
-      else
-      if($this->per > 0)
-      {
-        $query->take($this->per);
-      }
-
-      return response()->json($query->get())->withHeaders(['Count' => $base->getCountForPagination($columns)]);
+      return $this->jsonIndex();
     }
 
-    $pageName = 'page';
-    $page = Paginator::resolveCurrentPage($pageName);
-
-    $results = null;
-
-    if($total = $base->getCountForPagination($columns))
-    {
-      $results = $this->per > 0 ? $query->forPage($page, $this->per)->get(['*']) : $query->get(['*']);
-    }
-    else
-    {
-      $results = new Collection([]);
-    }
-
-    $paginator = new LengthAwarePaginator($results, $total, $this->per, $page, [
-      'path' => Paginator::resolveCurrentPath(),
-      'pageName' => $pageName,
-    ]);
-
-    return view($this->getViewNS() . $this->views['index'], [
-      $this->getCollectionName() => $paginator->appends(request()->query())
-    ]);
+    return $this->htmlIndex();
   }
 
   public function show()
@@ -99,12 +45,10 @@ trait Resource
 
     if(request()->wantsJson())
     {
-      return response()->json($this->resource());
+      return $this->jsonShow();
     }
 
-    return view($this->getViewNS() . $this->views['show'], [
-      $this->getInstanceName() => $this->resource()
-    ]);
+    return $this->htmlShow();
   }
 
   public function create()
@@ -114,9 +58,7 @@ trait Resource
       $this->authorize('create', $this->resource());
     }
 
-    return view($this->getViewNS() . $this->views['create'], [
-      $this->getInstanceName() => $this->resource()
-    ]);
+    return $this->htmlCreate();
   }
 
   public function store()
@@ -126,35 +68,36 @@ trait Resource
       $this->authorize('create', $this->resource());
     }
 
+    $attributes = request()->all();
+
     if(method_exists($this, 'validationRules'))
     {
-      $this->validateWith($this->validationRules());
+      $validated = $this->validateWith($this->validationRules());
+
+      if($this->fillOnlyValidated)
+      {
+        $attributes = $validated;
+      }
     }
 
-    $this->resource()->fill(request()->all());
+    $this->resource()->fill($attributes);
 
     if($this->resource()->save())
     {
       if(request()->wantsJson())
       {
-        return response()->json($this->resource());
+        return $this->jsonStoreSuccess($attributes);
       }
 
-      return redirect()->route(
-          $this->getResourceRoute() . '.show',
-          array_merge(request()->route()->parameters, [$this->resource()->getKey()])
-        )
-        ->with('alerts.success', class_basename($this->getClassName()) . ' Successfully created');
+      return $this->htmlStoreSuccess($attributes);
     }
 
     if(request()->wantsJson())
     {
-      return response()->json(['error' => 'Error encountered creating ' . class_basename($this->getClassName())])->status(500);
+      return $this->jsonStoreFailure($attributes);
     }
 
-    return redirect()->back()
-      ->with('alerts.danger', 'Error encountered creating ' . class_basename($this->getClassName()))
-      ->withInputs(request()->input());
+    return $this->htmlStoreFailure($attributes);
   }
 
   public function edit()
@@ -164,9 +107,7 @@ trait Resource
       $this->authorize('update', $this->resource());
     }
 
-    return view($this->getViewNS() . $this->views['edit'], [
-      $this->getInstanceName() => $this->resource()
-    ]);
+    return $this->htmlEdit();
   }
 
   public function update()
@@ -178,36 +119,37 @@ trait Resource
       $this->authorize('update', $this->resource());
     }
 
+    $attributes = request()->all();
+
     if(method_exists($this, 'validationRules'))
     {
-      $this->validateWith($this->validationRules());
+      $validated = $this->validateWith($this->validationRules());
+
+      if($this->fillOnlyValidated)
+      {
+        $attributes = $validated;
+      }
     }
 
-    $this->resource()->fill(request()->all());
+    $this->resource()->fill($attributes);
 
     if($this->resource()->save())
     {
       if(request()->wantsJson())
       {
-        return response()->json($this->resource());
+        return $this->jsonUpdateSuccess($attributes);
       }
 
-      return redirect()->route(
-          $this->getResourceRoute() . '.show',
-          array_merge(request()->route()->parameters)
-        )
-        ->with('alerts.success', class_basename($this->getClassName()) . ' Successfully updated');
+      return $this->htmlUpdateSuccess($attributes);
     }
 
     if(request()->wantsJson())
     {
-      return response()->json(['error' => 'Error encountered updating ' . class_basename($this->getClassName())], 500);
+      return $this->jsonUpdateFailure($attributes);
     }
 
 
-    return redirect()->back()
-      ->with('alerts.danger', 'Error encountered updating' . class_basename($this->getClassName()))
-      ->withInputs(request()->input());
+    return $this->htmlUpateFailure($attributes);
   }
 
   public function destroy()
@@ -219,25 +161,19 @@ trait Resource
 
     if($this->resource()->delete())
     {
-      $parameters = request()->route()->parameters;
-      array_pop($parameters);
-
       if(request()->wantsJson())
       {
-        return response()->json([]);
+        return $this->jsonDestroySuccess();
       }
 
-      return redirect()->route($this->getResourceRoute() . '.index', $parameters)
-        ->with('alerts.success', class_basename($this->getClassName()) . ' Successfully deleted');
+      return $this->htmlDestroySuccess();
     }
 
     if(request()->wantsJson())
     {
-      return response()->json(['error' => 'Error encountered deleting ' . class_basename($this->getClassName())], 500);
+      return $this->jsonDestroyFailure();
     }
 
-    return redirect()->back()
-      ->with('alerts.danger', 'Error encountered deleting' . class_basename($this->getClassName()))
-      ->withInputs(request()->input());
+    return $this->htmlDestroyFailure();
   }
 }
