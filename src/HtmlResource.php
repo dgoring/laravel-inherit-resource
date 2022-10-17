@@ -17,7 +17,7 @@ trait HtmlResource
 
   protected $per = 15;
 
-  protected $fillOnlyValidated = false;
+  protected $fillOnlyValidated = true;
 
   protected $distinctFix = true;
 
