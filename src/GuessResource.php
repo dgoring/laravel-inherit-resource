@@ -3,9 +3,11 @@ namespace Dgoring\Laravel\InheritResource;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Builder;
 
 trait GuessResource
 {
+  protected $resource_key  = null;
   protected $class_name    = null;
   protected $collection_name = null;
   protected $controller_name = null;
@@ -82,9 +84,21 @@ trait GuessResource
       return $this->resource;
     }
 
-    if($id = request()->route($this->getInstanceName()))
+    $value = request()->route($this->getInstanceName());
+
+    if($this->resource_key && $this->collection() instanceof Builder)
     {
-      return $this->resource = $this->collection()->findOrFail($id);
+      if($value)
+      {
+        $instance = $this->collection()->getModel();
+
+        return $this->resource = $this->collection()->where($instance->getTable() . '.' . $this->resource_key, $value)->firstOrFail();;
+      }
+    }
+    else
+    if($value)
+    {
+      return $this->resource = $this->collection()->findOrFail($value);
     }
 
     return $this->resource = $this->collection()->findOrNew(-1);
