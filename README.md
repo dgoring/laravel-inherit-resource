@@ -238,7 +238,7 @@ class UsersController extends Controller
 
     $this->authorize = false; // Switch to turn off authorize checks (default is on)
 
-    $this->saveTransaction = false; // If enabled model save and delete function are performed within a database transaction
+    $this->saveTransaction = true; // while enabled model save and delete function are performed within a database transaction
     $this->distinctFix = true; // if the query builder returns a distinct query, a fix will be applied to get the distinct count used for pagination
     $this->fillOnlyValidated = true; // while enabled only the validated fields will be allowed to be mass assigned to the model
 

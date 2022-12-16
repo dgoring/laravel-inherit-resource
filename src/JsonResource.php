@@ -17,7 +17,7 @@ trait JsonResource
 
   protected $fillOnlyValidated = true;
 
-  protected $saveTransaction = false;
+  protected $saveTransaction = true;
 
   protected $distinctFix = true;
 
