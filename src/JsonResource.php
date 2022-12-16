@@ -1,6 +1,7 @@
 <?php
 namespace Dgoring\Laravel\InheritResource;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
@@ -12,8 +13,11 @@ trait JsonResource
 
   protected $per = 15;
 
-  protected $distinctFix = true;
   protected $fillOnlyValidated = false;
+
+  protected $saveTransaction = false;
+
+  protected $distinctFix = true;
 
   public function index()
   {
@@ -54,9 +58,24 @@ trait JsonResource
       }
     }
 
-    $this->resource()->fill($attributes);
+    $saved = false;
 
-    if($this->resource()->save())
+    if($this->saveTransaction)
+    {
+      $saved = DB::transaction(function () {
+        $this->resource()->fill($attributes);
+
+        return $this->resource()->save();
+      });
+    }
+    else
+    {
+      $this->resource()->fill($attributes);
+
+      $saved = $this->resource()->save();
+    }
+
+    if($saved)
     {
       return $this->jsonStoreSuccess($attributes);
     }
@@ -85,7 +104,24 @@ trait JsonResource
 
     $this->resource()->fill($attributes);
 
-    if($this->resource()->save())
+    $saved = false;
+
+    if($this->saveTransaction)
+    {
+      $saved = DB::transaction(function () {
+        $this->resource()->fill($attributes);
+
+        return $this->resource()->save();
+      });
+    }
+    else
+    {
+      $this->resource()->fill($attributes);
+
+      $saved = $this->resource()->save();
+    }
+
+    if($saved)
     {
       return $this->jsonUpdateSuccess($attributes);
     }
@@ -100,7 +136,20 @@ trait JsonResource
       $this->authorize('delete', $this->resource());
     }
 
-    if($this->resource()->delete())
+    $deleted = false;
+
+    if($this->saveTransaction)
+    {
+      $deleted = DB::transaction(function () {
+        return $this->resource()->delete();
+      });
+    }
+    else
+    {
+      $deleted = $this->resource()->delete();
+    }
+
+    if($deleted)
     {
       return $this->jsonDestroySuccess();
     }
