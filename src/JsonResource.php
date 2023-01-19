@@ -64,7 +64,7 @@ trait JsonResource
 
     if($this->saveTransaction)
     {
-      $saved = DB::transaction(function () {
+      $saved = DB::transaction(function () use($attributes) {
         $this->resource()->fill($attributes);
 
         return $this->resource()->save();
@@ -110,7 +110,7 @@ trait JsonResource
 
     if($this->saveTransaction)
     {
-      $saved = DB::transaction(function () {
+      $saved = DB::transaction(function () use($attributes) {
         $this->resource()->fill($attributes);
 
         return $this->resource()->save();
