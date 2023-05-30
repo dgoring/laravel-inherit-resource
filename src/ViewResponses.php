@@ -25,15 +25,11 @@ trait ViewResponses
 
     $base = $query;
 
-    if($base instanceof Builder)
+    if($base instanceof Builder || $base instanceof Relation)
     {
       $base = $base->toBase();
     }
-    else
-    if($base instanceof Relation)
-    {
-      $base = $base->getBaseQuery();
-    }
+
 
     $pageName = 'page';
     $page = Paginator::resolveCurrentPage($pageName);
