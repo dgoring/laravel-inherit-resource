@@ -72,14 +72,9 @@ trait JsonResponses
 
     $base = $query;
 
-    if($base instanceof Builder)
+    if($base instanceof Builder || $base instanceof Relation)
     {
       $base = $base->toBase();
-    }
-    else
-    if($base instanceof Relation)
-    {
-      $base = $base->getBaseQuery();
     }
 
     if($skip = request()->query('skip'))
