@@ -95,11 +95,14 @@ trait JsonResponses
       $query->take($this->per);
     }
 
-    $class = $this->getJsonCollectionClassName() ?: $this->getJsonResourceClassName();
-
     $count = $base->getCountForPagination($columns);
 
-    if($class)
+    if($class = $this->getJsonCollectionClassName())
+    {
+      return (new $class($query->get()))->additional(['length' => $count]);
+    }
+
+    if($class = $this->getJsonResourceClassName())
     {
       return $class::collection($query->get())->additional(['length' => $count]);
     }
