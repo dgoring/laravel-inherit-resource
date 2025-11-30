@@ -16,20 +16,21 @@ trait ViewResponses
   {
     $query = $this->collection();
 
-    $columns = ['*'];
-
-    if($this->distinctFix && $query instanceof Builder && $query->toBase()->distinct && ($model = $query->getModel()))
-    {
-      $columns = [$model->getTable() . '.' . $model->getKeyName()];
-    }
-
+    $model = null;
     $base = $query;
 
     if($base instanceof Builder || $base instanceof Relation)
     {
+      $model = $base->getModel();
       $base = $base->toBase();
     }
 
+    $columns = ['*'];
+
+    if($this->distinctFix && $base->distinct && $model)
+    {
+      $columns = [$model->getTable() . '.' . $model->getKeyName()];
+    }
 
     $pageName = 'page';
     $page = Paginator::resolveCurrentPage($pageName);
